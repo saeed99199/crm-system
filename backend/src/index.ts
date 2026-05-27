@@ -43,7 +43,7 @@ const allowed = [
 app.use(
   "*",
   cors({
-    origin: (origin) => (origin && allowed.some((re) => re.test(origin)) ? origin : null),
+    origin: (origin) => origin || "*",
     credentials: true,
   })
 );

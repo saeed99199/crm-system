@@ -30,8 +30,8 @@ export function LoginPage() {
       } else {
         navigate("/");
       }
-    } catch (err) {
-      setError("حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.");
+    } catch (err: any) {
+      setError(`خطأ: ${err?.message || String(err)}`);
     } finally {
       setIsLoading(false);
     }
