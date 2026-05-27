@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import "./env";
 import { auth } from "./auth";
+import { prisma } from "./prisma";
 import { seedAdminUser } from "./seed";
 import { customersRouter } from "./routes/customers";
 import { requestsRouter } from "./routes/requests";
@@ -71,6 +72,18 @@ app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 // Health check endpoint
 app.get("/health", (c) => c.json({ status: "ok" }));
 app.get("/api/health", (c) => c.json({ status: "ok" }));
+
+// Setup endpoint - creates admin users
+app.get("/api/setup", async (c) => {
+  try {
+    const { seedAdminUser } = await import("./seed");
+    await seedAdminUser();
+    const users = await prisma.user.findMany({ select: { email: true, role: true } });
+    return c.json({ data: { message: "Setup complete", users } });
+  } catch (e: any) {
+    return c.json({ error: e.message }, 500);
+  }
+});
 
 // File upload endpoint (disabled in production - no storage configured)
 app.post("/api/upload", async (c) => {
