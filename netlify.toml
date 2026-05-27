@@ -1,10 +1,11 @@
 [build]
   base = "webapp"
-  command = "bun run build"
+  command = "npm install --legacy-peer-deps && npm run build"
   publish = "dist"
 
 [build.environment]
   VITE_BACKEND_URL = "https://crm-system-production-4055.up.railway.app"
+  NODE_VERSION = "22"
 
 [[redirects]]
   from = "/*"
