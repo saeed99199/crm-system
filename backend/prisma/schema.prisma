@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Better Auth tables
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?
+  role          String    @default("employee") // admin, manager, employee, viewer
+  hiddenPages   String?   @default("") // comma-separated page keys to hide: dashboard,customers,requests,contracts,employees,entities,calculator,settings
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+
+  // CRM Relations
+  assignedRequests   FinancingRequest[] @relation("AssignedEmployee")
+  activities         ActivityLog[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// CRM Tables
+
+model Customer {
+  id              String   @id @default(cuid())
+  name            String
+  nationalId      String?  // رقم الهوية
+  commercialReg   String?  // السجل التجاري
+  phone           String
+  email           String?
+  type            String   @default("individual") // individual, company
+  address         String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  requests        FinancingRequest[]
+  contracts       Contract[]
+  documents       CustomerDocument[]
+}
+
+model CustomerDocument {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // national_id, commercial_reg, salary_cert, bank_statement, other
+  fileUrl     String
+  fileSize    Int?
+  customerId  String
+  customer    Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  uploadedAt  DateTime @default(now())
+}
+
+model FinancingRequest {
+  id                  String   @id @default(cuid())
+  requestNumber       String   @unique
+  customerId          String
+  customer            Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  // Request Details
+  financingType       String   // personal, mortgage, car, business, etc.
+  requestedAmount     Float
+  approvedAmount      Float?
+  financingEntity     String?  // Bank name or financing company
+
+  // Status
+  status              String   @default("new") // new, under_review, documents_required, approved, rejected, completed
+
+  // Dates
+  submissionDate      DateTime @default(now())
+  lastUpdateDate      DateTime @updatedAt
+  approvalDate        DateTime?
+  completionDate      DateTime?
+
+  // Assignment
+  assignedEmployeeId  String?
+  assignedEmployee    User?    @relation("AssignedEmployee", fields: [assignedEmployeeId], references: [id])
+
+  // Notes
+  internalNotes       String?
+  rejectionReason     String?
+
+  // Relations
+  documents           Document[]
+  contract            Contract?
+  activities          ActivityLog[]
+
+  createdAt           DateTime @default(now())
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // id_copy, salary_certificate, bank_statement, commercial_license, etc.
+  fileUrl     String
+  fileSize    Int?
+  requestId   String
+  request     FinancingRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  uploadedAt  DateTime @default(now())
+}
+
+model Contract {
+  id              String   @id @default(cuid())
+  contractNumber  String   @unique
+  customerId      String
+  customer        Customer @relation(fields: [customerId], references: [id])
+  requestId       String   @unique
+  request         FinancingRequest @relation(fields: [requestId], references: [id])
+
+  // Contract Details
+  amount          Float
+  interestRate    Float?
+  duration        Int      // months
+  monthlyPayment  Float?
+  startDate       DateTime?
+  endDate         DateTime?
+
+  // File
+  fileUrl         String?
+  signedAt        DateTime?
+
+  status          String   @default("draft") // draft, pending_signature, signed, active, completed
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ActivityLog {
+  id          String   @id @default(cuid())
+  action      String   // created, updated, status_changed, document_uploaded, etc.
+  description String
+  entityType  String   // request, customer, contract
+  entityId    String
+
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+
+  requestId   String?
+  request     FinancingRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+
+  metadata    String?  // JSON string for additional data
+  createdAt   DateTime @default(now())
+}
+
+model FinancingEntity {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  type        String   // bank, finance_company, government
+  logo        String?
+  contactInfo String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
