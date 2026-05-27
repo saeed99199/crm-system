@@ -5,7 +5,7 @@ import { env } from "./env";
 import bcrypt from "bcryptjs";
 
 export const auth = betterAuth({
-  database: prismaAdapter(prisma, { provider: "sqlite" }),
+  database: prismaAdapter(prisma, { provider: "postgresql" }),
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: [
     "http://localhost:*",
@@ -15,6 +15,8 @@ export const auth = betterAuth({
     "https://*.vibecodeapp.com",
     "https://*.vibecode.dev",
     "https://vibecode.dev",
+    "https://*.netlify.app",
+    "https://*.up.railway.app",
   ],
   user: {
     additionalFields: {
@@ -59,8 +61,8 @@ export const auth = betterAuth({
     trustedProxyHeaders: true,
     disableCSRFCheck: true,
     defaultCookieAttributes: {
-      sameSite: "lax",
-      secure: false,
+      sameSite: "none",
+      secure: true,
     },
   },
 });
