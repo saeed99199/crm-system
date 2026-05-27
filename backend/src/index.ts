@@ -1,8 +1,6 @@
-import "@vibecodeapp/proxy"; // DO NOT REMOVE OTHERWISE VIBECODE PROXY WILL NOT WORK
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
-import { createVibecodeSDK, StorageError } from "@vibecodeapp/backend-sdk";
 import "./env";
 import { auth } from "./auth";
 import { seedAdminUser } from "./seed";
@@ -18,8 +16,6 @@ import { getPermissions, type Role } from "./permissions";
 
 // Create admin user if not exists
 seedAdminUser().catch(console.error);
-
-const vibecode = createVibecodeSDK();
 
 // Type the Hono app with user/session variables
 const app = new Hono<{
@@ -76,24 +72,9 @@ app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 app.get("/health", (c) => c.json({ status: "ok" }));
 app.get("/api/health", (c) => c.json({ status: "ok" }));
 
-// File upload endpoint
+// File upload endpoint (disabled in production - no storage configured)
 app.post("/api/upload", async (c) => {
-  const formData = await c.req.formData();
-  const file = formData.get("file");
-
-  if (!file || !(file instanceof File)) {
-    return c.json({ error: "No file provided" }, 400);
-  }
-
-  try {
-    const result = await vibecode.storage.upload(file);
-    return c.json({ data: result });
-  } catch (error) {
-    if (error instanceof StorageError) {
-      return c.json({ error: error.message }, error.statusCode as 400 | 500);
-    }
-    return c.json({ error: "Upload failed" }, 500);
-  }
+  return c.json({ error: "File upload not configured" }, 501);
 });
 
 // Get current user
