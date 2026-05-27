@@ -1,5 +1,5 @@
 [phases.build]
-cmds = ["bun install", "bunx prisma generate", "bunx prisma db push --accept-data-loss", "bun run src/seed-run.ts"]
+cmds = ["bunx prisma generate"]
 
 [start]
-cmd = "bun run src/index.ts"
+cmd = "bunx prisma db push --accept-data-loss && bun run src/seed-run.ts && bun run src/index.ts"
