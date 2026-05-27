@@ -1,0 +1,12 @@
+[build]
+  base = "webapp"
+  command = "bun run build"
+  publish = "dist"
+
+[build.environment]
+  VITE_BACKEND_URL = "https://crm-system-production-4055.up.railway.app"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
