@@ -40,6 +40,8 @@ const allowed = [
   /^https:\/\/vibecode\.dev$/,
   /^https:\/\/mytype\.vip$/,
   /^https:\/\/www\.mytype\.vip$/,
+  /^https:\/\/[a-z0-9-]+\.netlify\.app$/,
+  /^https:\/\/[a-z0-9-]+\.up\.railway\.app$/,
 ];
 
 app.use(
@@ -72,6 +74,7 @@ app.on(["GET", "POST"], "/api/auth/*", (c) => auth.handler(c.req.raw));
 
 // Health check endpoint
 app.get("/health", (c) => c.json({ status: "ok" }));
+app.get("/api/health", (c) => c.json({ status: "ok" }));
 
 // File upload endpoint
 app.post("/api/upload", async (c) => {
