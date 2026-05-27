@@ -8,4 +8,4 @@ cmds = ["bun install"]
 cmds = ["bunx prisma generate"]
 
 [start]
-cmd = "bunx prisma migrate deploy && bun run src/index.ts"
+cmd = "bunx prisma db push && bun run src/index.ts"
